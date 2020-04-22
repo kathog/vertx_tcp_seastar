@@ -307,7 +307,7 @@ seastar::future<> connection::read0() {
         if (!_parser.done()) {
             return read0();
         }
-        std::cout << "read0: " <<  seastar::this_shard_id() << std::endl;
+//        std::cout << "read0: " <<  seastar::this_shard_id() << std::endl;
         this->message = _parser.get_data();
         return _write_buf.write("").then([this] {
                 return _write_buf.close();

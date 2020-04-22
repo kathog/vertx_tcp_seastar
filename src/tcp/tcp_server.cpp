@@ -11,7 +11,7 @@ seastar::future<> tcp_server::listen(seastar::ipv4_addr addr) {
     {
         seastar::listen_options lo;
         lo.reuse_address = true;
-//        lo.set_fixed_cpu(2);
+        lo.lba = seastar::server_socket::load_balancing_algorithm::port;
         _tcp_listeners.push_back(seastar::listen(make_ipv4_address(addr), lo));
         do_accepts(_tcp_listeners);
     }
@@ -19,7 +19,7 @@ seastar::future<> tcp_server::listen(seastar::ipv4_addr addr) {
         seastar::listen_options lo;
         lo.proto = seastar::transport::SCTP;
         lo.reuse_address = true;
-//        lo.set_fixed_cpu(2);
+        lo.lba = seastar::server_socket::load_balancing_algorithm::port;
         _sctp_listeners.push_back(seastar::listen(make_ipv4_address(addr), lo));
         do_accepts(_sctp_listeners);
     }

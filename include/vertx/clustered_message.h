@@ -252,6 +252,26 @@ inline seastar::future<clustered_message> to_message (std::string& msg) {
     return seastar::make_ready_future<clustered_message>(std::move(message));
 }
 
+inline seastar::future<clustered_message> to_message (std::string&& msg) {
+    const char * b_data = msg.c_str();
+    int index = 0;
+
+    clustered_message message = {
+            int_value(b_data, index),
+            (int) b_data[index++],
+            (int) b_data[index++],
+            (((int) b_data[index++]) == 0),
+            string_value(b_data, index),
+            string_value(b_data, index),
+            int_value(b_data, index),
+            string_value(b_data, index),
+            int_value(b_data, index),
+            string_value(b_data, index)
+    };
+
+    return seastar::make_ready_future<clustered_message>(std::move(message));
+}
+
 
 inline seastar::future<std::string> to_string(clustered_message& message) {
     std::string s_message;

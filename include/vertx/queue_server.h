@@ -4,7 +4,8 @@
 
 #ifndef VERTX_TCP_SEASTAR_QUEUE_SERVER_H
 #define VERTX_TCP_SEASTAR_QUEUE_SERVER_H
-#include <seastar/net/dns.hh>
+#include <seastar/core/thread.hh>
+#include <seastar/core/seastar.hh>
 
 class queue_server;
 
@@ -28,28 +29,32 @@ public:
                     }
                 }
 
-                return to_message(message).then([this](clustered_message &&request_message) {
-                    auto function_invoke = vertx::consumers[request_message.getAddress()];
-                    clustered_message response_message{0, 1, 9, true, request_message.getAddress(), request_message.getReplay(), vertx::port,request_message.getHost(), 4, ""};
-                    function_invoke(request_message, response_message);
 
-                    return to_string(response_message).then([this, request_message = std::move(request_message)](std::string &&string_message) {
-                        const char *c_host = request_message.getHost() == "localhost" ? "127.0.0.1" : request_message.getHost().c_str();
-                        seastar::socket_address local = seastar::socket_address(::sockaddr_in{AF_INET, INADDR_ANY, {0}});
-                        return connect(seastar::make_ipv4_address({c_host, (uint16_t) request_message.getPort()}), local, seastar::transport::TCP).then([this, string_message = std::move(string_message)](seastar::connected_socket fd) {
-                            auto conn = new client_connection(std::move(fd));
-                            return conn->do_write(static_cast<std::string>(string_message).data(), string_message.size()).then_wrapped([conn](auto &&f) {
-                                delete conn;
-                                try {
-                                    f.get();
-                                } catch (std::exception &ex) {
-                                    seastar::fprint(std::cerr, "request error: %s\n", ex.what());
-                                }
-                                return seastar::make_ready_future<>();
+//                return seastar::async([this, &message] () {
+                return to_message(message).then([this](clustered_message &&request_message) {
+                        auto function_invoke = vertx::consumers[request_message.getAddress()];
+                        clustered_message response_message{0, 1, 9, true, request_message.getAddress(), request_message.getReplay(), vertx::port,request_message.getHost(), 4, ""};
+                        function_invoke(request_message, response_message);
+
+                        return to_string(response_message).then([this, request_message = std::move(request_message)](std::string &&string_message) {
+//                        const char *c_host = request_message.getHost() == "localhost" ? "127.0.0.1" : request_message.getHost().c_str();
+                            seastar::socket_address local = seastar::socket_address(::sockaddr_in{AF_INET, INADDR_ANY, {0}});
+                            return connect(seastar::make_ipv4_address({request_message.getHost().data(), (uint16_t) request_message.getPort()}), local, seastar::transport::TCP).then([this, string_message = std::move(string_message)](seastar::connected_socket fd) {
+                                auto conn = new client_connection(std::move(fd));
+                                return conn->do_write(static_cast<std::string>(string_message).data(), string_message.size()).then_wrapped([conn](auto &&f) {
+                                    delete conn;
+                                    try {
+                                        f.get();
+                                    } catch (std::exception &ex) {
+                                        seastar::fprint(std::cerr, "request error: %s\n", ex.what());
+                                    }
+                                    return seastar::make_ready_future<>();
+                                });
                             });
                         });
-                    });
+//                    });
                 });
+
             });
         });
     }
@@ -68,6 +73,7 @@ public:
         {
             seastar::listen_options lo;
             lo.reuse_address = true;
+            lo.lba = seastar::server_socket::load_balancing_algorithm::port;
             _tcp_listeners.push_back(seastar::listen(make_ipv4_address(addr), lo));
             do_accepts(_tcp_listeners);
         }

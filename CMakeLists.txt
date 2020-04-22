@@ -36,14 +36,11 @@ set(EXTRA_LIBRARY /usr/local/lib/libseastar.a
         )
 set(LIBRARIES_SEARCH_PATHS ${EXTRA_LIBRARY})
 include_directories(${PROJECT_SOURCE_DIR}/include)
-#include_directories(/home/nerull/dev/repo/cpp/hazelcast-cpp-client-3.12.1-Linux_64/cpp/Linux_64/hazelcast/include )
 include_directories(/home/nerull/dev/repo/cpp/hazelcast-cpp-client/hazelcast-cpp-client/cpp/Linux_64/hazelcast/include )
-#/home/nerull/dev/repo/cpp/hazelcast-cpp-client/hazelcast-cpp-client/external/include
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 
 add_library(hazelcast STATIC IMPORTED)
-#set_property(TARGET hazelcast PROPERTY IMPORTED_LOCATION /home/nerull/dev/repo/cpp/hazelcast-cpp-client/hazelcast-cpp-client/release/libHazelcastClient3.12_64.a)
 set_property(TARGET hazelcast PROPERTY IMPORTED_LOCATION /home/nerull/dev/repo/cpp/hazelcast-cpp-client/hazelcast-cpp-client/cpp/Linux_64/hazelcast/lib/libHazelcastClient3.12_64.a)
 
 
@@ -51,5 +48,6 @@ add_executable(vertx_tcp_seastar_bin main.cpp
         src/tcp/connection.cpp
         src/tcp/tcp_server.cpp
         src/vertx/hazelcast_cluster.cpp
-        include/tcp/client_connection.h)
+        include/tcp/client_connection.h
+        include/vertx/queue_server.h)
 target_link_libraries (vertx_tcp_seastar_bin  ${LIBRARIES_SEARCH_PATHS}  -lrt -lssl -lcrypto -lc hazelcast)

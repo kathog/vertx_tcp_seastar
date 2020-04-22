@@ -23,12 +23,10 @@ int main(int ac, char** av) {
     hazelcast::client::ClientConfig config;
     hazelcast::client::Address a{"127.0.0.1", 5701 };
     config.getNetworkConfig().addAddress(a);
-//    config.setExecutorPoolSize(1);
     hazelcast_cluster cluster {config};
     cluster.join();
     vertx::hz = std::make_unique<hazelcast_cluster>(cluster);
     vertx::port = 10000;
-//    vertx::register_workers();
 
     vertx::consumer("tarcza", [] (clustered_message& msg, clustered_message& response) {
         std::string body = msg.getBody();
@@ -51,7 +49,6 @@ int main(int ac, char** av) {
 
         std::cout<< "seastar::smp::count " << seastar::smp::count << std::endl;
 
-//        (void)service_loop_parallel();
         auto q_server = new seastar::distributed<queue_server>;
         uint16_t q_port = 1234;
         (void)q_server->start().then([q_server = std::move(q_server), q_port] () mutable {
